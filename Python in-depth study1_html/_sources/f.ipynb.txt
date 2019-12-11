@@ -1,0 +1,43 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Reference"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "1. 고성능 파이썬(http://www.yes24.com/Product/Goods/30231783)\n",
+    "1. https://playground.tensorflow.org/\n",
+    "1. https://dhiraa.github.io/miniflow/MiniFlow.html\n",
+    "1. https://github.com/marcotcr/lime\n",
+    "1. https://nhlmary3.tistory.com/entry/LIME-Locallly-Interpretable-Modelagnostic-Explanation"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
