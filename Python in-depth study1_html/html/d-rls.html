@@ -1,0 +1,1893 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Cost Function End to End - 2 &mdash; End to End with Python 0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="f.html" />
+    <link rel="prev" title="Cost Function End to End - 1" href="c-rls.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> End to End with Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="a-rls.html">Data 길들이기 End To End</a></li>
+<li class="toctree-l1"><a class="reference internal" href="b-rls.html">통계 검정 Frame Work End to End</a></li>
+<li class="toctree-l1"><a class="reference internal" href="c-rls.html">Cost Function End to End - 1</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cost Function End to End - 2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Loss-Function-자체를-바꾸는-Scaling">Loss Function 자체를 바꾸는 Scaling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Scaling-안하고-regression">Scaling 안하고 regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loss-function의-input-parameter-추가">loss function의 input parameter 추가</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Scaling">Scaling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Loss-함수의-Gradient-계산-한계---계산속도-저하와-메모리-용량-문제-발생">Loss 함수의 Gradient 계산 한계 - 계산속도 저하와 메모리 용량 문제 발생</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#데이터를-일부만-가지고-Gradient를-추정하면-되지-않을까?">데이터를 일부만 가지고 Gradient를 추정하면 되지 않을까?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Stochastic-Gradient-Method의-핵심-아이디어">Stochastic Gradient Method의 핵심 아이디어</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#실습-포인트">실습 포인트</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#SGD와-GD-방법론-비교">SGD와 GD 방법론 비교</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Remind-:-Descent-계열-알고리즘의-핵심-사항">Remind : Descent 계열 알고리즘의 핵심 사항</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#이-또한-맛만-보자">이 또한 맛만 보자</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#learning_rate이-큰-경우">learning_rate이 큰 경우</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#learning_rate이-작은-경우">learning_rate이 작은 경우</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#자동으로-learning_rate을-조정하는-아이디어는-없을까?">자동으로 learning_rate을 조정하는 아이디어는 없을까?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#집고-넘어갈-용어--2-(Linear-Model,-Linear-Regression,-Feature)">집고 넘어갈 용어 -2 (Linear Model, Linear Regression, Feature)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#1.-Linear-Regression-Model">1. Linear Regression Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#2.-Cubic-Regression-Model">2. Cubic Regression Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#3.-Exponential-Regression-Model">3. Exponential Regression Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#4.-Sine/cosine-Regression">4. Sine/cosine Regression</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Binary-Classification---초식을-깊숙히-익히자">Binary Classification - 초식을 깊숙히 익히자</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#H1,-H2,-H3중-어떤-모델이-좋은-모델일까?">H1, H2, H3중 어떤 모델이 좋은 모델일까?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#좋은-모델은-어떻게-구하지?-\to-확률-기반의-Loss-function을-정의-하면-되겠네?">좋은 모델은 어떻게 구하지? <span class="math notranslate nohighlight">\(\to\)</span> 확률 기반의 Loss function을 정의 하면 되겠네?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Binary-Classification의-Loss-function-=-Cross-Entropy">Binary Classification의 Loss function = Cross Entropy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#수학적-의미-보다-loss의-감을-잡아보자">수학적 의미 보다 loss의 감을 잡아보자</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#간단히-집고-넘어가는-확률의-법칙">간단히 집고 넘어가는 확률의 법칙</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Maximum-Likelihood">Maximum Likelihood</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#예제를-풀어보자">예제를 풀어보자</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#GD를-구현하자---Cross-Entropy의-Gradient">GD를 구현하자 - Cross Entropy의 Gradient</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#01.-sigmoid의-미분">01. sigmoid의 미분</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#02.-Linear-model의-미분">02. Linear model의 미분</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#03.-FeedForward-Model의-미분">03. FeedForward Model의 미분</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#04.-최종-Gradient-계산-(=-Backpropagation)">04. 최종 Gradient 계산 (= Backpropagation)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Gradient-Descent">Gradient Descent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Stochastic-Gradient-Descent">Stochastic Gradient Descent</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#어느-새-우린-Neural-Net-기초(Perceptron)-문제를-풀고-있었다.">어느 새 우린 Neural Net 기초(Perceptron) 문제를 풀고 있었다.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Classification-모델-검증하기---LIME-library">Classification 모델 검증하기 - LIME library</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#핵심-:-입력값을-조금-바꿨을-때-모델의-예측값이-크게-바뀌면,-그-변수는-중요한-변수이다.">핵심 : 입력값을 조금 바꿨을 때 모델의 예측값이 크게 바뀌면, 그 변수는 중요한 변수이다.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#오늘의-과제-1---3GB-파일에서-132번째-줄만-불러-함수-모델-fiiting-및-시간-측정하기(SGD-및-sin,-cos-활용)">오늘의 과제 1 - 3GB 파일에서 132번째 줄만 불러 함수 모델 fiiting 및 시간 측정하기(SGD 및 sin, cos 활용)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#오늘의-과제-2---Circle-Classification-하기">오늘의 과제 2 - Circle Classification 하기</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="f.html">Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">End to End with Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Cost Function End to End - 2</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/d-rls.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput,
+div.nbinput div.prompt,
+div.nbinput div.input_area,
+div.nbinput div[class*=highlight],
+div.nbinput div[class*=highlight] pre,
+div.nboutput,
+div.nbinput div.prompt,
+div.nbinput div.output_area,
+div.nboutput div[class*=highlight],
+div.nboutput div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput,
+div.nboutput {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput,
+    div.nboutput {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput div.prompt,
+div.nboutput div.prompt {
+    min-width: 5ex;
+    padding-top: 0.4em;
+    padding-right: 0.4em;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput div.prompt,
+    div.nboutput div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput div.prompt pre,
+div.nboutput div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput div.input_area,
+div.nboutput div.output_area {
+    padding: 0.4em;
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput div.input_area,
+    div.nboutput div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Cost-Function-End-to-End---2">
+<h1>Cost Function End to End - 2<a class="headerlink" href="#Cost-Function-End-to-End---2" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Loss-Function-자체를-바꾸는-Scaling">
+<h2>Loss Function 자체를 바꾸는 Scaling<a class="headerlink" href="#Loss-Function-자체를-바꾸는-Scaling" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">gradient_descent</span> <span class="c1"># 파일로 제공된 helper.py에서 GD를 부른다</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="o">%</span><span class="k">config</span> InlineBackend.figure_format = &#39;retina&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">N</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">5.0</span> <span class="c1"># Target function</span>
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">313</span><span class="p">)</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Scaling-안하고-regression">
+<h3>Scaling 안하고 regression<a class="headerlink" href="#Scaling-안하고-regression" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+\min_w loss(w;x,y)
+\end{equation}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{equation}
+loss(w;x,y) = \frac{1}{N}\sum_{i=1}^N |w_0x_i + w_1 - y_i|^2
+\end{equation}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{equation}
+\nabla loss(w) = \frac{2}{N}\sum_{i=1}^N (w_0x_i + w_1 - y_i)
+\begin{bmatrix}
+x_i\\1\\
+\end{bmatrix}
+\end{equation}\end{split}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#TODO grad_loss 함수작성하기</span>
+<span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">x_list</span><span class="p">,</span> <span class="n">y_list</span><span class="p">):</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_list</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">+=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">val</span>
+
+<span class="k">def</span> <span class="nf">grad_loss</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">x_list</span><span class="p">,</span> <span class="n">y_list</span><span class="p">):</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_list</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">er</span> <span class="o">=</span>  <span class="kc">None</span>
+        <span class="n">val</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">er</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">])</span> <span class="o">/</span> <span class="n">N</span>
+    <span class="k">return</span> <span class="n">val</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="loss-function의-input-parameter-추가">
+<h3>loss function의 input parameter 추가<a class="headerlink" href="#loss-function의-input-parameter-추가" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>지금까지는 loss 함수에서 <code class="docutils literal notranslate"><span class="pre">w</span></code>(혹은 a,b)만 input으로 받고, <code class="docutils literal notranslate"><span class="pre">data</span></code>는 글로벌 변수로 사용했습니다.</li>
+<li>관찰해보면 <code class="docutils literal notranslate"><span class="pre">loss(w)</span></code>은 <code class="docutils literal notranslate"><span class="pre">data</span></code>(<code class="docutils literal notranslate"><span class="pre">x_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>)에 따라서 변하게 됩니다.</li>
+<li>그러므로 <code class="docutils literal notranslate"><span class="pre">loss(w,</span> <span class="pre">x_set,</span> <span class="pre">y_set)</span></code>이 더 정확한 loss function의 표현입니다.</li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">W0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W0</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span><span class="n">W1</span><span class="p">)</span>
+<span class="n">LOSSW</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">*</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">wij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">W0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span> <span class="n">W1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span>
+        <span class="n">LOSSW</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">wij</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">w_gd</span><span class="p">,</span> <span class="n">path_gd</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1E-3</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">y_pred</span> <span class="o">=</span> <span class="n">w_gd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x_train</span> <span class="o">+</span> <span class="n">w_gd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">50.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">])</span>
+<span class="n">w_gd</span><span class="p">,</span> <span class="n">path_gd</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1E-3</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+
+<span class="n">paths</span> <span class="o">=</span> <span class="n">path_gd</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> <span class="c1"># check</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Scaling">
+<h3>Scaling<a class="headerlink" href="#Scaling" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\hat{x} = \frac{x - x_{min}}{x_{max} - x_{min}}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># TODO Scaling 작성하기</span>
+<span class="n">scaled_x_train</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">W0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W0</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span><span class="n">W1</span><span class="p">)</span>
+<span class="n">LOSSW</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">*</span> <span class="mi">0</span>
+<span class="n">LOSSW_Scaled</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">*</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">wij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">W0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span> <span class="n">W1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span>
+        <span class="n">LOSSW</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">wij</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+        <span class="n">LOSSW_Scaled</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">wij</span><span class="p">,</span> <span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">50.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">])</span>
+<span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">path_gd_sc</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+
+<span class="n">paths</span> <span class="o">=</span> <span class="n">path_gd_sc</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW_Scaled</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW_Scaled</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">50.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">])</span>
+<span class="n">w_gd</span><span class="p">,</span> <span class="n">path_gd</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1E-3</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+
+<span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">path_gd_sc</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd_sc</span><span class="p">,</span> <span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">221</span><span class="p">)</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">path_gd</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">90</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;original&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">222</span><span class="p">)</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">path_gd_sc</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW_Scaled</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW_Scaled</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">90</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">223</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">w_gd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">x_train</span> <span class="o">+</span> <span class="n">w_gd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;original&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">224</span><span class="p">)</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">w_gd_sc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">scaled_x_train</span> <span class="o">+</span> <span class="n">w_gd_sc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scaled_x_train</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="Loss-함수의-Gradient-계산-한계---계산속도-저하와-메모리-용량-문제-발생">
+<h2>Loss 함수의 Gradient 계산 한계 - 계산속도 저하와 메모리 용량 문제 발생<a class="headerlink" href="#Loss-함수의-Gradient-계산-한계---계산속도-저하와-메모리-용량-문제-발생" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Data가 50000개 있다면<ul>
+<li>1차원 선형회귀 문제 : 50,000 x 4bytes = 200,000bytes = 0.2MB</li>
+<li>MNIST 이미지 : 28 x 28 x 50,000 x 4bytes = 156MB</li>
+<li>저화질 이미지 : 280 x 280 x 50,000 x 4bytes = 15,600MB = 15.6GB</li>
+<li>중간화질 이미지 : 560 x 560 x 50,000 x 4bytes = 15,600MB = 62.4GB</li>
+</ul>
+</li>
+</ul>
+<div class="section" id="데이터를-일부만-가지고-Gradient를-추정하면-되지-않을까?">
+<h3>데이터를 일부만 가지고 Gradient를 추정하면 되지 않을까?<a class="headerlink" href="#데이터를-일부만-가지고-Gradient를-추정하면-되지-않을까?" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>장점<ul>
+<li>계산속도 증가, 메모리 용량 감소</li>
+<li>Local Minimum을 빠져나갈 가능성 증가</li>
+</ul>
+</li>
+<li>단점<ul>
+<li>부정확한 Gradient 값</li>
+<li>가장 빠른 Search 방향 설정 불가</li>
+</ul>
+</li>
+</ol>
+<p><img alt="sgd" src="_images/sgd1.png" /></p>
+<p><img alt="gdgd1" src="_images/gdgd.png" /> ***</p>
+<p><img alt="gdgd" src="_images/sgdsgd_2.png" /></p>
+</div>
+<div class="section" id="Stochastic-Gradient-Method의-핵심-아이디어">
+<h3>Stochastic Gradient Method의 핵심 아이디어<a class="headerlink" href="#Stochastic-Gradient-Method의-핵심-아이디어" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><code class="docutils literal notranslate"><span class="pre">x_train</span></code>와 <code class="docutils literal notranslate"><span class="pre">y_train</span></code>이 너무 많아서 메모리가 부족하거나 계산이 오래걸리네.</li>
+<li><code class="docutils literal notranslate"><span class="pre">x_train</span></code>와 <code class="docutils literal notranslate"><span class="pre">y_train</span></code>의 일부만으로 gradient 계산하자.</li>
+<li>RANDOM 하게 섞으면 일부분만으로도 충분히 gradient를 잘 추정할 수 있을 것이다.</li>
+</ol>
+<p><strong>STOCHASTIC = RANDOM</strong></p>
+</div>
+<div class="section" id="실습-포인트">
+<h3>실습 포인트<a class="headerlink" href="#실습-포인트" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">np.random.suffle()</span></code>을 사용하여 <code class="docutils literal notranslate"><span class="pre">x_train</span></code>과 <code class="docutils literal notranslate"><span class="pre">y_train</span></code>을 섞기.</p>
+<ul>
+<li><p class="first">Hint 1</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">shuffled_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">shuffled_id</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">generate_batches()</span></code>를 사용하여 여러개의 batch로 나누기 : <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">=</span> <span class="pre">5</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span> <span class="ow">in</span> <span class="n">generate_batches</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">각 나눈 batch 들로 Gradient를 계산하고</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Gradient Decent Method를 적용</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">w1</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#그림을 자세히 보기 위해 범위만 바꿈.</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">5.0</span> <span class="c1"># Target function</span>
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">313</span><span class="p">)</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">))</span>
+
+<span class="n">W0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>
+<span class="n">W0</span><span class="p">,</span> <span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span><span class="n">W1</span><span class="p">)</span>
+<span class="n">LOSSW</span> <span class="o">=</span> <span class="n">W0</span> <span class="o">*</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">W0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">wij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">W0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span> <span class="n">W1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span>
+        <span class="n">LOSSW</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">wij</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#TODO Batch generator 만들기</span>
+<span class="k">def</span> <span class="nf">generate_batches</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create batches of features and labels</span>
+<span class="sd">    :param batch_size: The batch size</span>
+<span class="sd">    :param features: List of features</span>
+<span class="sd">    :param labels: List of labels</span>
+<span class="sd">    :return: Batches of (Features, Labels)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="c1"># Test, 여기서 에러나면 실행 안되도록</span>
+    <span class="n">out_batches</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">sample_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">end_i</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">features</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">end_i</span><span class="p">]]</span>
+        <span class="n">out_batches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out_batches</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">out_batches</span> <span class="o">=</span> <span class="n">generate_batches</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span> <span class="ow">in</span> <span class="n">out_batches</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">x_batch</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">y_batch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#TODO SGD 만들기</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">path_sgd</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">cost_history_sgd</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">path_sgd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w0</span><span class="p">)</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MaxIter</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">shuffled_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="c1">#TODO1</span>
+<span class="kc">None</span> <span class="c1"># Hint1 활용</span>
+<span class="n">x_train</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxIter</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span> <span class="ow">in</span> <span class="n">generate_batches</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">w1</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1">#TODO4</span>
+        <span class="n">w0</span> <span class="o">=</span> <span class="n">w1</span>
+        <span class="n">path_sgd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
+        <span class="n">cost_history_sgd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">path_sgd</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">20</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="SGD와-GD-방법론-비교">
+<h4>SGD와 GD 방법론 비교<a class="headerlink" href="#SGD와-GD-방법론-비교" title="Permalink to this headline">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">gradient_descent</span>
+<span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">w_gd</span><span class="p">,</span> <span class="n">path_gd</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">grad_loss</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">MaxIter</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">loss</span><span class="p">(</span><span class="n">w_gd</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">))</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">path_gd</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">W1</span><span class="p">,</span> <span class="n">LOSSW</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">jet</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">LOSSW</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">paths</span><span class="p">[</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_units</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$w_0$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$w_1$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="Remind-:-Descent-계열-알고리즘의-핵심-사항">
+<h3>Remind : Descent 계열 알고리즘의 핵심 사항<a class="headerlink" href="#Remind-:-Descent-계열-알고리즘의-핵심-사항" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Weight의 초기값을 무엇으로 할까?</li>
+<li>Search 방향을 어떻게 정할까?</li>
+<li>Learning Rate를 어떤 값으로할까? <span class="math notranslate nohighlight">\(\to\)</span> 이걸 자동으로 최적값을 찾아 주는 건 없나?</li>
+</ol>
+<p>참조 : <a class="reference external" href="http://shuuki4.github.io/deep%20learning/2016/05/20/Gradient-Descent-Algorithm-Overview.html">http://shuuki4.github.io/deep%20learning/2016/05/20/Gradient-Descent-Algorithm-Overview.html</a></p>
+<p><img alt="adap" src="_images/adapAlpha.gif" /></p>
+<div class="section" id="이-또한-맛만-보자">
+<h4>이 또한 맛만 보자<a class="headerlink" href="#이-또한-맛만-보자" title="Permalink to this headline">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">x_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">313</span><span class="p">)</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="learning_rate이-큰-경우">
+<h3>learning_rate이 큰 경우<a class="headerlink" href="#learning_rate이-큰-경우" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">learning_rate=1.5</span></code>로 설정하면, loss function이 계속 커짐</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">MaxIter</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxIter</span><span class="p">):</span>
+    <span class="n">loss0</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">loss0</span><span class="p">)</span>
+    <span class="n">w0</span> <span class="o">=</span> <span class="n">w1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="learning_rate이-작은-경우">
+<h3>learning_rate이 작은 경우<a class="headerlink" href="#learning_rate이-작은-경우" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">learning_rate=0.0001</span></code>로 설정하면, loss function이 계속 작아지지만, 너무 느림</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="n">MaxIter</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxIter</span><span class="p">):</span>
+    <span class="n">loss0</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">loss0</span><span class="p">)</span>
+    <span class="n">w0</span> <span class="o">=</span> <span class="n">w1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="자동으로-learning_rate을-조정하는-아이디어는-없을까?">
+<h3>자동으로 learning_rate을 조정하는 아이디어는 없을까?<a class="headerlink" href="#자동으로-learning_rate을-조정하는-아이디어는-없을까?" title="Permalink to this headline">¶</a></h3>
+<p>매번 <code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>을 감으로 때려넣지 않고 자동으로 찾아가게 해봅시다.</p>
+<ol class="arabic simple">
+<li><code class="docutils literal notranslate"><span class="pre">loss(w1,x_train,y_train)</span></code>가 <code class="docutils literal notranslate"><span class="pre">loss(w0,x_train,y_train)</span></code>보다 커질때마다, <code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>을 2배씩 작게 하고</li>
+<li>다시 next position(<code class="docutils literal notranslate"><span class="pre">w1</span></code>)을 업데이트 하고 <code class="docutils literal notranslate"><span class="pre">loss(w1,x_train,y_train)</span></code>을 계산해서 <code class="docutils literal notranslate"><span class="pre">loss(w0,x_train,y_train)</span></code> 값과 비교해봅니다.</li>
+<li><code class="docutils literal notranslate"><span class="pre">loss(w1,x_train,y_train)</span> <span class="pre">&lt;</span> <span class="pre">loss(w0,x_train,y_train)</span></code>이 참값이 될때까지, <code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>를 2배씩 줄입니다.</li>
+</ol>
+<p><strong>HINT:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">loss</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">loss</span><span class="p">(</span><span class="n">w0</span><span class="p">):</span> <span class="c1"># loss(w1) 값이 loss(w0)보다 크다면</span>
+    <span class="c1">#learning_rate을 줄입니다.</span>
+<span class="k">else</span><span class="p">:</span> <span class="c1"># loss(w1) 값이 loss(w0)보다 작다면</span>
+    <span class="c1">#업데이트 합니다.</span>
+</pre></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#TODO Adaptive GD 만들기</span>
+<span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">])</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">MaxIter</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxIter</span><span class="p">):</span>
+    <span class="n">loss0</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">w0</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">grad</span>
+    <span class="n">loss1</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="k">if</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="kc">None</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">w0</span><span class="p">,</span> <span class="n">loss0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="집고-넘어갈-용어--2-(Linear-Model,-Linear-Regression,-Feature)">
+<h3>집고 넘어갈 용어 -2 (Linear Model, Linear Regression, Feature)<a class="headerlink" href="#집고-넘어갈-용어--2-(Linear-Model,-Linear-Regression,-Feature)" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="o">%</span><span class="k">config</span> InlineBackend.figure_format = &#39;retina&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">forward_model</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="c1"># Fix But Unknown 모델</span>
+    <span class="k">assert</span> <span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">w</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">loss_mse</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">feature_set</span><span class="p">,</span> <span class="n">label_set</span><span class="p">):</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">feature</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">feature_set</span><span class="p">,</span> <span class="n">label_set</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">forward_model</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">feature</span><span class="p">)</span> <span class="o">-</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_set</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">val</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="1.-Linear-Regression-Model">
+<h4>1. Linear Regression Model<a class="headerlink" href="#1.-Linear-Regression-Model" title="Permalink to this headline">¶</a></h4>
+<div class="math notranslate nohighlight">
+\[f(x) = w_0 + w_1x\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">327</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">features1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="n">xval</span><span class="p">]</span> <span class="k">for</span> <span class="n">xval</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+<span class="n">labels1</span> <span class="o">=</span> <span class="n">y</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">loss1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">loss_mse</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">features1</span><span class="p">,</span> <span class="n">labels1</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss1</span><span class="p">,</span> <span class="n">w0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<span class="n">w1</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">prediction1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features1</span><span class="p">,</span> <span class="n">w1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prediction1</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="2.-Cubic-Regression-Model">
+<h4>2. Cubic Regression Model<a class="headerlink" href="#2.-Cubic-Regression-Model" title="Permalink to this headline">¶</a></h4>
+<div class="math notranslate nohighlight">
+\[f(x) = w_0 + w_1x + w_2x^2 + w_3x^3\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">327</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="o">.</span><span class="mi">4</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">features3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="n">xval</span><span class="p">,</span> <span class="n">xval</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">xval</span><span class="o">**</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">xval</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+<span class="n">labels3</span> <span class="o">=</span> <span class="n">y</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+<span class="n">loss3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">loss_mse</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">features3</span><span class="p">,</span> <span class="n">labels3</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss3</span><span class="p">,</span> <span class="n">w0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">prediction3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features3</span><span class="p">,</span> <span class="n">w3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prediction3</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="3.-Exponential-Regression-Model">
+<h4>3. Exponential Regression Model<a class="headerlink" href="#3.-Exponential-Regression-Model" title="Permalink to this headline">¶</a></h4>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+f(x) &amp;= e^{w_0x}\\
+g(x) &amp;= \ln f(x) = w_0x
+\end{align}\end{split}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">327</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">features4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">xval</span><span class="p">]</span> <span class="k">for</span> <span class="n">xval</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+<span class="n">labels4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">])</span>
+<span class="n">loss4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">loss_mse</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">features4</span><span class="p">,</span> <span class="n">labels4</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss4</span><span class="p">,</span> <span class="n">w0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<span class="n">w4</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">prediction4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features4</span><span class="p">,</span> <span class="n">w4</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prediction4</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="4.-Sine/cosine-Regression">
+<h4>4. Sine/cosine Regression<a class="headerlink" href="#4.-Sine/cosine-Regression" title="Permalink to this headline">¶</a></h4>
+<div class="math notranslate nohighlight">
+\[f(x) = w_0\cos(\pi x) + w_1\sin(\pi  x)\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">327</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># TODO 수식 표현 해 보기</span>
+<span class="n">features5</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">labels5</span> <span class="o">=</span> <span class="n">y</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">w0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">])</span>
+<span class="n">loss5</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">loss_mse</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">features5</span><span class="p">,</span> <span class="n">labels5</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">loss5</span><span class="p">,</span> <span class="n">w0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<span class="n">w5</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">prediction5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features5</span><span class="p">,</span> <span class="n">w5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prediction5</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title fa fa-exclamation-circle"><strong>NOTE:</strong></p>
+<p>여기까지 보신 모든 모델이 Linear Model 입니다!!!!!</p>
+<p>모델이 <span class="math notranslate nohighlight">\(Xw\)</span> 의 형태로 표현되면 Linear Model이라 칭합니다.</p>
+<p><span class="math notranslate nohighlight">\(X\)</span> : Feature</p>
+<p><span class="math notranslate nohighlight">\(w\)</span> : Weight</p>
+<p>그럼 도대체 무엇에 대해 선형이란 것인가? weight에 대해 선형이라는 것입니다.</p>
+<p>즉, <span class="math notranslate nohighlight">\(w_0w_1x + w_2x^2\)</span> 같은 것은 선형 모델이 아닙니다</p>
+</div>
+<p><img alt="linear" src="_images/linear.png" /></p>
+<p>많은 문제를 Linear Model로 풀어낼 수 있습니다. 대강의 과정은 다음과 같습니다.</p>
+<ol class="arabic simple">
+<li>모델의 목표값이 될 변수가 발현될 전체 영역에서 고루 분포되어 있는 데이터를 가지고 있는가?</li>
+</ol>
+<ul class="simple">
+<li>간단히 Histogram으로 Balance를 보거나</li>
+<li>그렇지 않다면 적절한 시험 계획을 통해 데이터를 확보해야 합니다.</li>
+</ul>
+<ol class="arabic simple" start="2">
+<li>목표값과 관련있다고 생각되는 변수의 전체 상관관계를 파악하여 선형성을 가지는 것으로 보이는 Feature를 선택합니다.(피어슨 상관계수)</li>
+</ol>
+<ul class="simple">
+<li>Feature 선정은 당연히 쉽지 않으나, 우리가 푸는 문제의 대부분은 아래와 같다는 가정에서 시작해 봅니다<ul>
+<li>누군가 고민했던 문제거나(논문에서 지배 방정식의 요소 요소를 참조)</li>
+<li>나도 충분히 고민해왔던 문제(내가 잘 알고 있는 변수 부터 시작한다)</li>
+</ul>
+</li>
+</ul>
+<ol class="arabic simple" start="3">
+<li>그 후 여러가지 Linear Model을 이용해서 Regression을 해봅니다.</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="section" id="Binary-Classification---초식을-깊숙히-익히자">
+<h2>Binary Classification - 초식을 깊숙히 익히자<a class="headerlink" href="#Binary-Classification---초식을-깊숙히-익히자" title="Permalink to this headline">¶</a></h2>
+<p><img alt="binClass" src="_images/binClass.png" /></p>
+<div class="section" id="H1,-H2,-H3중-어떤-모델이-좋은-모델일까?">
+<h3>H1, H2, H3중 어떤 모델이 좋은 모델일까?<a class="headerlink" href="#H1,-H2,-H3중-어떤-모델이-좋은-모델일까?" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>H3 보다는 H1, H2가 좋다 : 틀린 갯수가 적으니까</li>
+<li>H1과 H2 중에는? : 갯수만 가지고서는 좋고 나쁨을 비교할 수 없다.<span class="math notranslate nohighlight">\(\to\)</span> Continuous한 평가 방식 필요</li>
+<li>틀리다 맞다(0,1)가 아니라 어느정도 틀렸다를 나타내고 싶음 <span class="math notranslate nohighlight">\(\to\)</span> 0~1 사이에 각 점을 매핑 <span class="math notranslate nohighlight">\(\to\)</span> 결국 확률로 표현됨</li>
+<li>0~1 사이 각 점을 매핑 하는 함수 : sigmoid (Activation Function의 한 종류)</li>
+</ol>
+<table border="1" class="docutils">
+<colgroup>
+<col width="53%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Weight Variation</th>
+<th class="head">Bias Variation</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><img alt="sigmoidWeight" src="_images/weight_animation.gif" /></td>
+<td><img alt="sigmoidBias" src="_images/bias_animation.gif" /></td>
+</tr>
+</tbody>
+</table>
+<p><img alt="sig3d" src="_images/sig3d.png" /></p>
+<p><img alt="binNewLine" src="_images/binNewLine_1.png" /></p>
+</div>
+<div class="section" id="좋은-모델은-어떻게-구하지?-\to-확률-기반의-Loss-function을-정의-하면-되겠네?">
+<h3>좋은 모델은 어떻게 구하지? <span class="math notranslate nohighlight">\(\to\)</span> 확률 기반의 Loss function을 정의 하면 되겠네?<a class="headerlink" href="#좋은-모델은-어떻게-구하지?-\to-확률-기반의-Loss-function을-정의-하면-되겠네?" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="Binary-Classification의-Loss-function-=-Cross-Entropy">
+<h2>Binary Classification의 Loss function = Cross Entropy<a class="headerlink" href="#Binary-Classification의-Loss-function-=-Cross-Entropy" title="Permalink to this headline">¶</a></h2>
+<div class="math notranslate nohighlight">
+\[loss(y, \hat{y}) = \frac{1}{N}\sum_{i=1}^{N}-y_i\log\hat{y_i}-(1-y_i)\log(1-\hat{y_i})\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\hat{y^{(i)}} = \sigma(x^{(i)}W)\]</div>
+<ol class="arabic simple">
+<li>Linear Model</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\begin{split} z = x W =
+\begin{bmatrix}
+1 &amp; x_1 &amp; x_2
+\end{bmatrix}
+\begin{bmatrix}
+w_0 \\ w_1 \\ w_2
+\end{bmatrix}=w_0 + w_1 x_1 + w_2x_2\end{split}\]</div>
+<ol class="arabic simple">
+<li>Sigmoid</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\sigma(z)=\frac{1}{1+e^{-z}}\]</div>
+<div class="section" id="수학적-의미-보다-loss의-감을-잡아보자">
+<h3>수학적 의미 보다 loss의 감을 잡아보자<a class="headerlink" href="#수학적-의미-보다-loss의-감을-잡아보자" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="간단히-집고-넘어가는-확률의-법칙">
+<h4>간단히 집고 넘어가는 확률의 법칙<a class="headerlink" href="#간단히-집고-넘어가는-확률의-법칙" title="Permalink to this headline">¶</a></h4>
+<ol class="arabic simple">
+<li>확률 합의 법칙 : 두개의 사건이 동시에 일어나지 않을 때 각각 독립사건(조건) 확률을 더하면 전체 사건 확률이 된다</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[P(ALL)=\sum{P(X, Y)}=P(X \cup Y)\]</div>
+<ol class="arabic simple" start="2">
+<li>확률 곱의 법칙 : 두개의 사건이 동시에 일어날 때 각각 독립사건(조건) 확률을 곱하면 동시 발생 전체 사건 확률이 된다</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[P(ALL)=P(Y|X)P(X)=P(X \cap Y)\]</div>
+<p><img alt="probability" src="_images/probSimple.jpg" /></p>
+<p><img alt="binPoss" src="_images/binPoss_1.png" /></p>
+</div>
+<div class="section" id="Maximum-Likelihood">
+<h4>Maximum Likelihood<a class="headerlink" href="#Maximum-Likelihood" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="n">드러난</span> <span class="n">현상</span> <span class="n">기반으로</span> <span class="n">관심</span> <span class="n">대상의</span> <span class="n">발생</span> <span class="n">확률을</span> <span class="n">최대로</span> <span class="n">만드는</span> <span class="n">모델</span><span class="p">(</span><span class="n">혹은</span> <span class="n">값</span><span class="p">)</span>
+<span class="o">*</span> <span class="n">동시에</span> <span class="n">일어나는</span> <span class="n">사건이라면</span> <span class="n">현재</span> <span class="n">나온</span> <span class="n">답이</span> <span class="n">정답일</span> <span class="n">확률을</span> <span class="n">모두</span> <span class="n">곱하는</span> <span class="n">것이</span> <span class="n">Maximum</span> <span class="n">Likelihood</span> <span class="n">임</span>
+<span class="o">*</span> <span class="n">즉</span><span class="p">,</span> <span class="n">상기의</span> <span class="n">Binary</span> <span class="n">Classification</span> <span class="n">상황에서는</span>
+
+  <span class="n">Maximum</span> <span class="n">Likelihood</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="n">x</span> <span class="mf">0.8</span> <span class="n">x</span> <span class="mf">0.1</span> <span class="n">x</span> <span class="mf">0.1</span> <span class="n">x</span> <span class="mf">0.7</span> <span class="n">x</span> <span class="mf">0.8</span> <span class="o">=</span> <span class="mf">0.004032</span>
+
+<span class="o">*</span> <span class="n">자</span> <span class="n">이제</span> <span class="n">Loss</span> <span class="n">Function</span> <span class="n">인</span> <span class="n">Cross</span> <span class="n">Entropy와</span> <span class="n">Maximum</span> <span class="n">Likelihood</span> <span class="n">의</span> <span class="n">관계를</span> <span class="n">알아보자</span>
+</pre></div>
+</div>
+<div class="math notranslate nohighlight">
+\[E = \frac{1}{N}\sum_{i=1}^{N}-y_i\log\hat{y_i}-(1-y_i)\log(1-\hat{y_i})\]</div>
+<div class="math notranslate nohighlight">
+\[\small\frac{1}{6}\sum_{i=1}^{6}-y_i\log\hat{y_i} = -1 \cdot log(0.9) -1 \cdot log(0.8) -1 \cdot log(0.1) -0 \cdot log(0.9) -0 \cdot log(0.3) -0 \cdot log(0.2)\]</div>
+<div class="math notranslate nohighlight">
+\[\small\frac{1}{6}\sum_{i=1}^{6}-(1-y_i)\log(1-\hat{y_i}) = -0 \cdot log(0.1) -0 \cdot log(0.2) -0 \cdot log(0.9) -1 \cdot log(0.1) -1 \cdot log(0.7) -1 \cdot log(0.8)\]</div>
+<div class="math notranslate nohighlight">
+\[\small6E = -log(0.9) -log(0.8) -log(0.1) -log(0.1) -log(0.7) -log(0.8) = -log(0.9 \times 0.8 \times 0.1 \times 0.1 \times 0.7 \times 0.8)\]</div>
+<p>즉, Cross Entropy는 Maximum Likelihood에 Log를 취한 값이다. 즉 정답이 정답일 확률을 구한것과 다르지 않다.</p>
+<p>이 확률이 높아지도록 Cross Entropy의 Weight를 조정하면 되는 것</p>
+</div>
+<div class="section" id="예제를-풀어보자">
+<h4>예제를 풀어보자<a class="headerlink" href="#예제를-풀어보자" title="Permalink to this headline">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">plot_scatter</span><span class="p">(</span><span class="n">W_</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)]:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">==</span> <span class="n">k</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-.</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">)</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="o">-</span><span class="n">W_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">W_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">x1</span>  <span class="o">-</span> <span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">W_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="s1">&#39;--k&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">4.</span><span class="o">/</span><span class="mf">5.</span><span class="p">,</span> <span class="mf">3.</span><span class="o">/</span><span class="mf">4.</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">327</span><span class="p">)</span>
+<span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xy</span><span class="p">))</span>
+<span class="n">labels</span><span class="p">[</span><span class="n">W</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">W</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">xy</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">W</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">xy</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># TODO 1</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">xy</span><span class="p">])</span>
+<span class="n">features</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">W0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">])</span> <span class="c1"># Weight 초기값</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">W0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="math notranslate nohighlight">
+\[\sigma(z)=\frac{1}{1+e^{-z}}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># TODO Sigmoid를 lambda로 표현해 보기 Hint. exponential 함수는 np.exp()를 사용</span>
+<span class="n">sigmoid</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># TODO 최종 모델 표현</span>
+<span class="n">z</span> <span class="o">=</span>  <span class="kc">None</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="math notranslate nohighlight">
+\[loss(y, \hat{y}) = \frac{1}{30}\sum_{i=1}^{30}-y_i\log\hat{y_i}-(1-y_i)\log(1-\hat{y_i})\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">cross_entropy</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">yhat</span><span class="p">):</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">yi</span><span class="p">,</span> <span class="n">yhati</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">yhat</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">-</span> <span class="n">yi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">yhati</span><span class="p">)</span> \
+                  <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">yi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">yhati</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">val</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">val</span> <span class="o">=</span> <span class="n">cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="GD를-구현하자---Cross-Entropy의-Gradient">
+<h2>GD를 구현하자 - Cross Entropy의 Gradient<a class="headerlink" href="#GD를-구현하자---Cross-Entropy의-Gradient" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>sigmoid의 미분</li>
+<li>linear model의 미분</li>
+<li>FeedForward Model의 미분(Chian Rule)</li>
+</ol>
+<div class="section" id="01.-sigmoid의-미분">
+<h3>01. sigmoid의 미분<a class="headerlink" href="#01.-sigmoid의-미분" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\sigma'(z) &amp;= \left[\frac{1}{1+e^{-z}}\right]'\\
+&amp;= \left(-\frac{1}{(1+e^{-z})^2}\right) \cdot \left(-e^{-z}\right)\\
+&amp;= \frac{e^{-z}}{(1+e^{-z})^2}\\
+&amp;= \frac{1}{1+e^{-z}}\frac{e^{-z}}{1+e^{-z}}\\
+&amp;= \frac{1}{1+e^{-z}}\frac{1 + e^{-z} - 1}{1+e^{-z}}\\
+&amp;= \frac{1}{1+e^{-z}}\left(1 - \frac{1}{1+e^{-z}}\right)\\
+&amp;= \sigma(z) (1-\sigma(z))
+\end{align}\end{split}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sigmoid_prime</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="02.-Linear-model의-미분">
+<h3>02. Linear model의 미분<a class="headerlink" href="#02.-Linear-model의-미분" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+\frac{\partial}{\partial W_j}\left(xW\right) &amp;= \frac{\partial}{\partial W_j}\left(\sum_{i=1}^d x_iW_i \right)\\
+&amp;= x_j
+\end{align}\end{split}\]</div>
+</div>
+<div class="section" id="03.-FeedForward-Model의-미분">
+<h3>03. FeedForward Model의 미분<a class="headerlink" href="#03.-FeedForward-Model의-미분" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+    \frac{\partial}{\partial W_j}\hat{y_i} &amp;= \frac{\partial}{\partial W_j}\sigma(x_iW)\\
+    &amp;= \frac{\partial}{\partial z}\sigma(z)\frac{\partial z}{\partial W_j}\\
+    &amp;=\sigma'(z)\frac{\partial z}{\partial W_j}\\
+    &amp;=\sigma'(z)\frac{\partial (x_iW)}{\partial W_j}\\
+    &amp;=\sigma(z)(1-\sigma(z))\frac{\partial (x_iW)}{\partial W_j}\\
+    &amp;=\sigma(z)(1-\sigma(z))x_j\\
+    &amp;=\hat{y_i}(1-\hat{y_i})x_j
+\end{align}\end{split}\]</div>
+</div>
+<div class="section" id="04.-최종-Gradient-계산-(=-Backpropagation)">
+<h3>04. 최종 Gradient 계산 (= Backpropagation)<a class="headerlink" href="#04.-최종-Gradient-계산-(=-Backpropagation)" title="Permalink to this headline">¶</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{align}
+\frac{1}{30}\sum_{i=1}^{30}\frac{\partial}{\partial W_j}\left(-y_i\log\hat{y_i}-(1-y_i)\log(1-\hat{y_i})\right)
+&amp;=\frac{1}{30}\sum_{i=1}^{30}-(y_i-\hat{y_i}) x_j
+\end{align}\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#TODO 최종 Gradient</span>
+<span class="k">def</span> <span class="nf">grad_loss</span><span class="p">(</span><span class="n">W_</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">W0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="n">yhati</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">val</span> <span class="o">+=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">val</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Gradient-Descent">
+<h4>Gradient Descent<a class="headerlink" href="#Gradient-Descent" title="Permalink to this headline">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MaxEpochs</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">W0_</span> <span class="o">=</span> <span class="n">W0</span>
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxEpochs</span><span class="p">):</span>
+    <span class="c1"># TODO 7</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">W0_</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">W1</span> <span class="o">=</span> <span class="n">W0_</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">grad</span>
+    <span class="n">W0_</span> <span class="o">=</span> <span class="n">W1</span>
+<span class="n">W_gd</span> <span class="o">=</span> <span class="n">W0_</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">W0</span><span class="p">))))</span>
+<span class="n">plot_scatter</span><span class="p">(</span><span class="n">W0</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># 초기값 모델</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">W_gd</span><span class="p">))))</span>
+<span class="n">plot_scatter</span><span class="p">(</span><span class="n">W_gd</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># GD 1000번 후 모델</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Stochastic-Gradient-Descent">
+<h4>Stochastic Gradient Descent<a class="headerlink" href="#Stochastic-Gradient-Descent" title="Permalink to this headline">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">helper</span> <span class="k">import</span> <span class="n">generate_batches</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MaxEpochs</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">W0_</span> <span class="o">=</span> <span class="n">W0</span>
+
+<span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">features</span><span class="p">))</span>
+<span class="kc">None</span> <span class="c1"># idx 섞기</span>
+<span class="n">shuffled_features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+<span class="n">shuffled_labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">MaxEpochs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span> <span class="ow">in</span> <span class="n">generate_batches</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffled_features</span><span class="p">,</span> <span class="n">shuffled_labels</span><span class="p">):</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">grad_loss</span><span class="p">(</span><span class="n">W0_</span><span class="p">,</span> <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span><span class="p">)</span>
+        <span class="n">W1</span> <span class="o">=</span> <span class="n">W0_</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">grad</span>
+        <span class="n">W0_</span> <span class="o">=</span> <span class="n">W1</span>
+<span class="n">W_sgd</span> <span class="o">=</span> <span class="n">W0_</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">sigmoid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">W_sgd</span><span class="p">))))</span>
+<span class="n">plot_scatter</span><span class="p">(</span><span class="n">W_sgd</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="math notranslate nohighlight">
+\[\hat{y^{(i)}} = \sigma(x^{(i)}W)\]</div>
+<ol class="arabic simple">
+<li>Linear Model</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\begin{split} z = x W =
+\begin{bmatrix}
+1 &amp; x_1 &amp; x_2
+\end{bmatrix}
+\begin{bmatrix}
+w_0 \\ w_1 \\ w_2
+\end{bmatrix}=w_0 + w_1 x_1 + w_2x_2\end{split}\]</div>
+<ol class="arabic simple">
+<li>Sigmoid</li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\sigma(z)=\frac{1}{1+e^{-z}}\]</div>
+</div>
+</div>
+</div>
+<div class="section" id="어느-새-우린-Neural-Net-기초(Perceptron)-문제를-풀고-있었다.">
+<h2>어느 새 우린 Neural Net 기초(Perceptron) 문제를 풀고 있었다.<a class="headerlink" href="#어느-새-우린-Neural-Net-기초(Perceptron)-문제를-풀고-있었다." title="Permalink to this headline">¶</a></h2>
+<p><img alt="neuralNet" src="_images/neuralNet.png" /></p>
+<p><img alt="frbp" src="_images/frbp.png" /></p>
+</div>
+<div class="section" id="Classification-모델-검증하기---LIME-library">
+<h2>Classification 모델 검증하기 - LIME library<a class="headerlink" href="#Classification-모델-검증하기---LIME-library" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="핵심-:-입력값을-조금-바꿨을-때-모델의-예측값이-크게-바뀌면,-그-변수는-중요한-변수이다.">
+<h3>핵심 : 입력값을 조금 바꿨을 때 모델의 예측값이 크게 바뀌면, 그 변수는 중요한 변수이다.<a class="headerlink" href="#핵심-:-입력값을-조금-바꿨을-때-모델의-예측값이-크게-바뀌면,-그-변수는-중요한-변수이다." title="Permalink to this headline">¶</a></h3>
+<p>수학적으로 LIME이 블랙 박스 모델을 설명하는 방법은 모델을 해석 가능한 간단한 선형 모델로 근사하는 것입니다.</p>
+<p>복잡한 모델 전체를 근사하는 것은 어렵지만, 우리가 설명하고 싶은 예측 주변에 대해서만 간단한 모델로 근사하는 것은 매우 쉽습니다.</p>
+<p>아래 그림처럼 어떤 모델의 변수가 두 개만 있고 데이터를 두 변수를 이용해 파란색과 붉은색 두 클래스로 분류한다고 생각해 봅시다.</p>
+<p>모델의 decision boundary(빨간색과 파란색이 나뉘는 경계)는 매우 복잡합니다.</p>
+<p>하지만 아래 그림처럼 우리가 설명하려는 데이터(굵은 빨간 십자가)의 살짝 옆에만 본다면,</p>
+<p>그 주변만 근사한 선형 함수를 만들어낼 수 있습니다.</p>
+<p>이 선형 함수는 전체적으로 보면 원래 모델과는 전혀 다르지만, 특정 예시 주위에서는 원래 모델과 비슷하게 행동합니다.</p>
+<p>이렇게 만든 간단한 선형 함수를 보면 이 예시에서 어떤 변수가 중요한 역할을 하는지 알 수 있죠.</p>
+<p>이것이 LIME에 Local이라는 말이 붙는 이유입니다.</p>
+<p><img alt="lime" src="_images/lime.png" /></p>
+<p>참고1 : <a class="reference external" href="https://nhlmary3.tistory.com/entry/LIME-Locallly-Interpretable-Modelagnostic-Explanation">https://nhlmary3.tistory.com/entry/LIME-Locallly-Interpretable-Modelagnostic-Explanation</a></p>
+<p>참고2 : <a class="reference external" href="https://blog.dominodatalab.com/shap-lime-python-libraries-part-1-great-explainers-pros-cons/">https://blog.dominodatalab.com/shap-lime-python-libraries-part-1-great-explainers-pros-cons/</a></p>
+<p>Code : <a class="reference external" href="https://github.com/marcotcr/lime">https://github.com/marcotcr/lime</a></p>
+</div>
+<div class="section" id="오늘의-과제-1---3GB-파일에서-132번째-줄만-불러-함수-모델-fiiting-및-시간-측정하기(SGD-및-sin,-cos-활용)">
+<h3>오늘의 과제 1 - 3GB 파일에서 132번째 줄만 불러 함수 모델 fiiting 및 시간 측정하기(SGD 및 sin, cos 활용)<a class="headerlink" href="#오늘의-과제-1---3GB-파일에서-132번째-줄만-불러-함수-모델-fiiting-및-시간-측정하기(SGD-및-sin,-cos-활용)" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="오늘의-과제-2---Circle-Classification-하기">
+<h3>오늘의 과제 2 - Circle Classification 하기<a class="headerlink" href="#오늘의-과제-2---Circle-Classification-하기" title="Permalink to this headline">¶</a></h3>
+<p><img alt="circleclass" src="_images/circleClass.jpg" /></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="k">import</span> <span class="n">make_circles</span>
+<span class="kn">from</span> <span class="nn">matplotlib.pylab</span> <span class="k">import</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="o">%</span><span class="k">config</span> InlineBackend.figure_format = &#39;retina&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">def</span> <span class="nf">plot_scatter</span><span class="p">(</span><span class="n">W_</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)]:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">==</span> <span class="n">k</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="o">-</span><span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">W_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">W_</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">W_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">W_</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="s1">&#39;--k&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># generate 2d classification dataset</span>
+<span class="n">xy</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">make_circles</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="c1"># scatter plot, dots colored by class value</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">xy</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">))</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="s1">&#39;blue&#39;</span><span class="p">}</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">grouped</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;scatter&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Boundary가 직선이 아닌 원으로 나오도록 Feature를 설정해야함</p>
+<p>Hint : 원의 방정식</p>
+<p><span class="math notranslate nohighlight">\(w_0\cdot 1 + w_1 x^2 + w_2 y^2 = 0\)</span></p>
+<p>if <span class="math notranslate nohighlight">\(w_0 &lt;0\)</span></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="f.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="c-rls.html" class="btn btn-neutral float-left" title="Cost Function End to End - 1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Sung Hoon Bang
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
